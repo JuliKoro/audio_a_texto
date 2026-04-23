@@ -5,37 +5,60 @@ import getpass
 from google import genai
 
 # Configuración Inicial
-# Si dejas "TU_API_KEY_ACA", el script te la pedirá por consola. 
-# Si pones tu clave real aquí, el script la detectará y omitirá la pregunta.
 API_KEY = "TU_API_KEY_ACA"
+
+def obtener_mejor_modelo(client):
+    """
+    Consulta a la API los modelos disponibles, filtra los de la familia 'Flash'
+    y selecciona automáticamente la versión más reciente.
+    """
+    modelos_flash = []
+    for model in client.models.list():
+        # Buscamos modelos que sean 'flash' y que no sean experimentales ('exp') si es posible
+        if "flash" in model.name.lower() and "exp" not in model.name.lower():
+            # Limpiamos el prefijo 'models/' que a veces devuelve la API
+            nombre_limpio = model.name.replace("models/", "")
+            modelos_flash.append(nombre_limpio)
+            
+    if not modelos_flash:
+        raise ValueError("No se encontraron modelos Flash disponibles para esta cuenta.")
+
+    # Al ordenar alfabéticamente en reversa, gemini-3.x queda arriba de gemini-2.x o 1.5
+    modelos_flash.sort(reverse=True)
+    modelo_elegido = modelos_flash[0]
+    
+    return modelo_elegido
 
 def transcribe_media():
     print("--- Herramienta de Transcripción Gemini ---")
     
-    # Lógica inteligente para la API Key
     global API_KEY
     if API_KEY == "TU_API_KEY_ACA" or not API_KEY.strip():
         print("\n[!] No se detectó una API Key hardcodeada.")
-        # getpass oculta los caracteres por seguridad mientras escribes
-        API_KEY = getpass.getpass("Ingrese su API Key (el texto será invisible por seguridad): ").strip()
+        API_KEY = getpass.getpass("Ingrese su API Key (invisible): ").strip()
         
     if not API_KEY:
-        print("Error: La API Key es obligatoria para continuar.")
+        print("Error: La API Key es obligatoria.")
         return
 
-    # Inicializamos el cliente con la clave validada
+    # Inicializamos el cliente
     client = genai.Client(api_key=API_KEY)
     
-    # Captura de la ruta de entrada
+    try:
+        modelo_actual = obtener_mejor_modelo(client)
+        print(f"[*] Modelo detectado y auto-seleccionado: {modelo_actual}")
+    except Exception as e:
+        print(f"Error al buscar modelos: {e}")
+        return
+
+    # Captura de rutas
     file_path = input("\nIngrese la ruta del archivo de audio/video: ").strip()
     
     if not os.path.exists(file_path):
-        print(f"Error: No se pudo encontrar el archivo en la ruta: {file_path}")
+        print(f"Error: No se pudo encontrar el archivo en: {file_path}")
         return
 
-    # Captura del nombre de salida
-    output_base = input("Ingrese el nombre base para los archivos de salida (ej: clase_arquitectura): ").strip()
-    # Limpiamos la extensión por si el usuario la puso
+    output_base = input("Ingrese el nombre base para la salida (ej: apunte): ").strip()
     if output_base.endswith(".txt") or output_base.endswith(".json"):
         output_base = output_base.rsplit('.', 1)[0]
 
@@ -46,7 +69,7 @@ def transcribe_media():
     print(f"Subiendo archivo a la nube...")
     
     try:
-        # Subir el archivo
+        # Subir archivo
         sample_file = client.files.upload(file=file_path)
         print(f"Archivo subido exitosamente (ID: {sample_file.name})")
 
@@ -60,10 +83,10 @@ def transcribe_media():
             print("\nError: El procesamiento falló en el servidor.")
             return
 
-        # Generar transcripción
-        print("\nGenerando transcripción técnica...")
+        # Generar transcripción usando la variable dinámica
+        print(f"\nTranscribiendo con {modelo_actual}...")
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model=modelo_actual, # <--- Usamos la variable en lugar del texto fijo
             contents=[
                 "Actúa como un transcriptor profesional. Transcribe el siguiente contenido "
                 "palabra por palabra, manteniendo tecnicismos y nombres propios de forma precisa.",
@@ -71,27 +94,25 @@ def transcribe_media():
             ]
         )
 
-        # Guardar resultado TXT
+        # Guardar TXT
         with open(output_txt, "w", encoding="utf-8") as f:
             f.write(response.text)
             
-        # Construir y guardar metadatos en JSON
+        # Guardar JSON
         metadatos = {
             "archivo_original": os.path.basename(file_path),
             "ruta_absoluta": os.path.abspath(file_path),
             "id_nube": sample_file.name,
-            "uri_acceso": sample_file.uri,
-            "mime_type": sample_file.mime_type,
-            "fecha_procesamiento": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "modelo_utilizado": "gemini-2.0-flash"
+            "modelo_utilizado": modelo_actual, # Guardamos qué modelo se usó realmente
+            "fecha_procesamiento": time.strftime("%Y-%m-%d %H:%M:%S")
         }
         
         with open(output_json, "w", encoding="utf-8") as json_file:
             json.dump(metadatos, json_file, indent=4, ensure_ascii=False)
         
         print(f"\n¡Proceso finalizado con éxito!")
-        print(f"📄 Transcripción guardada en: {os.path.abspath(output_txt)}")
-        print(f"💾 Metadatos guardados en:   {os.path.abspath(output_json)}")
+        print(f"📄 Texto: {os.path.abspath(output_txt)}")
+        print(f"💾 Datos: {os.path.abspath(output_json)}")
 
     except Exception as e:
         print(f"\nOcurrió un error inesperado: {e}")

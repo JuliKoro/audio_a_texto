@@ -1,18 +1,18 @@
 # 🎙️ Gemini Transcriptor: Audio & Video a Texto
-*Versión 0.2*
+*Versión 0.3*
 
-Esta herramienta de consola desarrollada en Python permite realizar transcripciones precisas de archivos de audio (.mp3) o video (.mp4) utilizando la potencia de los modelos multimodales **Gemini 2.x Flash** a través de la API de Google GenAI. 
+Esta herramienta de consola desarrollada en Python permite realizar transcripciones precisas de archivos de audio (.mp3) o video (.mp4) utilizando la potencia de los modelos multimodales **Gemini Flash** a través de la API de Google GenAI. 
 
-Está diseñada específicamente para entornos de desarrollo en Linux (WSL2/Debian) y enfocada en la facilidad de uso para estudiantes y profesionales que necesiten procesar seminarios, clases o reuniones técnicas.
+Está diseñada específicamente para entornos de desarrollo en Linux (WSL2/Debian) y enfocada en la facilidad de uso para estudiantes y profesionales que necesiten procesar seminarios, clases o reuniones técnicas sin preocuparse por el mantenimiento de la API.
 
 ## ✨ Características principales
 
-- **Transcripción de alta fidelidad:** Utiliza modelos de última generación que comprenden términos técnicos y contextos complejos.
+- **Auto-detección de Modelos (Future-Proof):** El script consulta los servidores de Google en tiempo real y selecciona automáticamente la versión "Flash" más reciente y estable habilitada para tu cuenta. Nunca más verás un error `404` por modelos obsoletos.
+- **Transcripción de alta fidelidad:** Comprende términos técnicos y contextos complejos de forma nativa.
 - **Interfaz Interactiva:** Solicita rutas de archivos y nombres de salida directamente por consola.
-- **Seguridad de Credenciales:** La API Key se ingresa de forma oculta (invisible en terminal) si no está configurada, evitando fugas de seguridad.
+- **Seguridad de Credenciales:** La API Key se ingresa de forma oculta (invisible en terminal) para evitar fugas de seguridad en tu código fuente.
 - **Doble Salida de Datos:** - Archivo `.txt` con la transcripción íntegra.
-  - Archivo `.json` con metadatos del proceso (ID de la nube, fecha, modelo, etc.).
-- **Compatibilidad con archivos largos:** Optimizado para manejar contenidos de hasta 2 horas de duración.
+  - Archivo `.json` con metadatos del proceso (ID de la nube, fecha, versión exacta del modelo utilizado, etc.).
 
 ---
 
@@ -76,11 +76,11 @@ Al finalizar, encontrarás en tu carpeta:
 ---
 
 ## 📝 Notas técnicas
-- El script utiliza el modelo `gemini-2.0-flash`. Si el modelo se actualiza, puedes cambiar el string en la llamada a `client.models.generate_content`.
+- **Gestión de Modelos:** La función `obtener_mejor_modelo()` se encarga de filtrar versiones experimentales (`-exp`) y ordenar las versiones disponibles para garantizar el uso de la tecnología de producción más moderna.
 
 - El estado `PROCESSING` en los servidores de Google puede tardar unos minutos dependiendo de la duración del audio. El script incluye un sistema de espera automática con indicadores visuales en la consola.
 
-- Versión de Python: Python 3.11.2
+- Versión de Python: `Python 3.11.2`
 
 ---
 
