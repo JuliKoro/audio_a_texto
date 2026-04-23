@@ -206,9 +206,31 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Local Media/Output Files
-.mp3
-.mp4
-.wav
-.txt
-.json
+# Entorno Virtual
+venv/
+.venv/
+env/
+
+# Archivos de entrada (Multimedia)
+*.mp3
+*.mp4
+*.wav
+*.m4a
+
+# Archivos de salida
+# Ignoramos todos los .txt y .json generados por el script
+*.txt
+*.json
+
+# Excepción: No ignorar el archivo de instrucciones
+!README.md
+
+# Artefactos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Metadatos de Windows/WSL (Zone.Identifier)
+*:Zone.Identifier
+.DS_Store
+Thumbs.db
