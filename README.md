@@ -50,6 +50,35 @@ Si tienes un video de 2 horas (por ejemplo, un seminario de la facultad), extrae
 
 ---
 
+> [!WARNING]  
+> **⚠️ ADVERTENCIA: Límites de Salida (Output Tokens)**
+> Aunque los modelos Gemini pueden recibir horas de audio, tienen un límite de salida (aprox. 8,000 tokens). Si un audio es muy largo (más de 45-60 minutos), el modelo se detendrá al alcanzar este límite y la transcripción quedará incompleta.
+> Para audios largos, es obligatorio seguir el tutorial de fragmentación a continuación:
+
+## ✂️ Tutorial: Procesamiento de Archivos Largos (> 45 min)
+Si tu seminario o clase dura más de 45 minutos, sigue estos pasos para garantizar una transcripción completa:
+
+1. **Fragmentar el audio (Chunking)**
+Usa ffmpeg para dividir el archivo en partes de 45 minutos (2700 segundos):
+   ```bash
+   ffmpeg -i tu_archivo_largo.mp3 -f segment -segment_time 2700 -c copy parte_%03d.mp3
+   ```
+*Esto generará archivos: `parte_000.mp3`, `parte_001.mp3`, etc.*
+
+2. **Transcribir cada parte**
+Ejecuta el script para cada parte generada:
+
+`parte_000.mp3` -> salida: `clase_parte1`
+
+`parte_001.mp3` -> salida: `clase_parte2`
+
+3. **Unir los archivos de texto**
+Una vez tengas todos los archivos `.txt`, únelos en uno solo con este comando de Linux:
+   ```bash
+   cat clase_parte1.txt clase_parte2.txt > transcripcion_completa.txt
+   ```
+---
+
 ## 🚀 Instrucciones de Uso
 
 Una vez que tengas tu entorno activo y tu archivo de audio/video listo, sigue estos pasos:

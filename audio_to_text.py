@@ -83,16 +83,39 @@ def transcribe_media():
             print("\nError: El procesamiento falló en el servidor.")
             return
 
-        # Generar transcripción usando la variable dinámica
+        # Generar transcripción con sistema de reintentos (Exponential Backoff)
         print(f"\nTranscribiendo con {modelo_actual}...")
-        response = client.models.generate_content(
-            model=modelo_actual, # <--- Usamos la variable en lugar del texto fijo
-            contents=[
-                "Actúa como un transcriptor profesional. Transcribe el siguiente contenido "
-                "palabra por palabra, manteniendo tecnicismos y nombres propios de forma precisa.",
-                sample_file
-            ]
-        )
+        
+        max_reintentos = 3
+        response = None
+        
+        for intento in range(max_reintentos):
+            try:
+                response = client.models.generate_content(
+                    model=modelo_actual,
+                    contents=[
+                        "Actúa como un transcriptor profesional. Transcribe el siguiente contenido "
+                        "palabra por palabra, manteniendo tecnicismos y nombres propios de forma precisa.",
+                        sample_file
+                    ]
+                )
+                break # Si tiene éxito, rompemos el ciclo for y continuamos
+                
+            except Exception as e:
+                error_str = str(e)
+                # Si el error es 503 (Servidor ocupado) o 429 (Cuota excedida temporalmente)
+                if "503" in error_str or "UNAVAILABLE" in error_str or "429" in error_str:
+                    espera = (2 ** intento) * 5 # Esperará 5s, luego 10s, luego 20s...
+                    print(f"\n[!] Servidor congestionado. Reintentando en {espera} segundos... (Intento {intento + 1} de {max_reintentos})")
+                    time.sleep(espera)
+                else:
+                    # Si es otro tipo de error (ej. clave incorrecta), lanzamos el error y abortamos
+                    raise e
+        
+        # Validamos si después de todos los reintentos seguimos sin respuesta
+        if not response:
+            print("\nError: No se pudo obtener la transcripción después de varios intentos. Intenta más tarde.")
+            return
 
         # Guardar TXT
         with open(output_txt, "w", encoding="utf-8") as f:
