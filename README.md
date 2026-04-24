@@ -1,5 +1,5 @@
 # 🎙️ Gemini Transcriptor: Audio & Video a Texto
-*Versión 0.3*
+*Versión 0.4*
 
 Esta herramienta de consola desarrollada en Python permite realizar transcripciones precisas de archivos de audio (.mp3) o video (.mp4) utilizando la potencia de los modelos multimodales **Gemini Flash** a través de la API de Google GenAI. 
 
@@ -51,7 +51,7 @@ Si tienes un video de 2 horas (por ejemplo, un seminario de la facultad), extrae
 ---
 
 > [!WARNING]  
-> **⚠️ ADVERTENCIA: Límites de Salida (Output Tokens)**
+> Límites de Salida (Output Tokens)**
 > Aunque los modelos Gemini pueden recibir horas de audio, tienen un límite de salida (aprox. 8,000 tokens). Si un audio es muy largo (más de 45-60 minutos), el modelo se detendrá al alcanzar este límite y la transcripción quedará incompleta.
 > Para audios largos, es obligatorio seguir el tutorial de fragmentación a continuación:
 
